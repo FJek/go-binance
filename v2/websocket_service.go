@@ -417,22 +417,13 @@ type WsAggTradeEvent struct {
 }
 
 // WsTradeHandler handle websocket trade event
-type WsTradeHandler func(event *WsTradeEvent)
+type WsTradeHandler func(data []byte)
 
 // WsTradeServe serve websocket handler with a symbol
 func WsTradeServe(symbol string, handler WsTradeHandler, errHandler ErrHandler) (doneC, stopC chan struct{}, err error) {
 	endpoint := fmt.Sprintf("%s/%s@trade", getWsEndpoint(), strings.ToLower(symbol))
 	cfg := newWsConfig(endpoint)
-	wsHandler := func(message []byte) {
-		event := new(WsTradeEvent)
-		err := json.Unmarshal(message, event)
-		if err != nil {
-			errHandler(err)
-			return
-		}
-		handler(event)
-	}
-	return wsServe(cfg, wsHandler, errHandler)
+	return wsServe(cfg, WsHandler(handler), errHandler)
 }
 
 // WsTradeEvent define websocket trade event
